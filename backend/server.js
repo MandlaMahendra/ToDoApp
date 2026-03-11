@@ -13,6 +13,8 @@ app.use(express.json());
 const todoRoutes = require("./routes/todoRoutes");
 app.use("/api/todos", todoRoutes);
 
+app.use("/api/auth", require("./routes/authRoutes"));
+
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB Connected"))
 .catch(err => console.log(err));
@@ -20,4 +22,3 @@ mongoose.connect(process.env.MONGO_URI)
 app.listen(5000, () => {
   console.log("Server running on port 5000");
 });
-app.use("/api/auth", require("./routes/authRoutes"));

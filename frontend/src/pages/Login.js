@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { API_BASE_URL } from "../api";
 
 export default function Login({ setAuth, setShowRegister }) {
   const [email, setEmail] = useState("");
@@ -8,7 +9,7 @@ export default function Login({ setAuth, setShowRegister }) {
 
   async function login() {
     try {
-      const res = await fetch("https://todoapp-jizo.onrender.com/api/auth/login", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

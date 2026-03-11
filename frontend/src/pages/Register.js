@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_BASE_URL } from "../api";
 
 export default function Register({ setAuth, setShowRegister }) {
   const [name, setName] = useState("");
@@ -8,7 +9,7 @@ export default function Register({ setAuth, setShowRegister }) {
 
   async function register() {
     try {
-      const res = await fetch("https://todoapp-jizo.onrender.com/api/auth/register", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),

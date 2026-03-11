@@ -29,11 +29,25 @@ router.post("/login", async (req, res) => {
 
   const token = jwt.sign(
     { id: user._id },
-    "SECRET_KEY",
+    process.env.JWT_SECRET || "SECRET_KEY",
     { expiresIn: "1d" }
   );
 
   res.json({ token });
+});
+
+// GET CURRENT USER
+router.get("/me", async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "No token" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "SECRET_KEY");
+    const user = await User.findById(decoded.id).select("-password");
+    res.json(user);
+  } catch (error) {
+    res.status(401).json({ message: "Invalid token" });
+  }
 });
 
 module.exports = router;

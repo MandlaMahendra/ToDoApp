@@ -17,7 +17,11 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const newTodo = new Todo({
-      text: req.body.text
+      text: req.body.text,
+      priority: req.body.priority,
+      dueDate: req.body.dueDate,
+      category: req.body.category,
+      description: req.body.description
     });
 
     const savedTodo = await newTodo.save();
@@ -41,7 +45,14 @@ router.put("/:id", async (req, res) => {
   try {
     const updatedTodo = await Todo.findByIdAndUpdate(
       req.params.id,
-      { completed: req.body.completed },
+      {
+        text: req.body.text,
+        completed: req.body.completed,
+        priority: req.body.priority,
+        dueDate: req.body.dueDate,
+        category: req.body.category,
+        description: req.body.description
+      },
       { new: true }
     );
     res.json(updatedTodo);
