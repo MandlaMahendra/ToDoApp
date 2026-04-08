@@ -7,7 +7,7 @@ It features a clean, advanced dashboard UI, real-time task management, and cloud
 
 ## 🌐 Live Demo
 
-🔗 Frontend: https://to-do-app-eta-pearl.vercel.app/
+🔗 Frontend: https://todoapp-mahi-pearl.vercel.app/
 🔗 Backend API: https://todoapp-jizo.onrender.com  
 
 ---
