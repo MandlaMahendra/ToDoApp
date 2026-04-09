@@ -31,8 +31,8 @@ export default function Register({ setAuth, setShowRegister }) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600">
-      <div className="bg-white p-8 rounded-xl shadow-xl w-[350px]">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 p-4">
+      <div className="bg-white p-6 md:p-8 rounded-xl shadow-xl w-[90%] max-w-[350px]">
         <h2 className="text-2xl font-bold mb-4 text-center">Register</h2>
 
         {error && (

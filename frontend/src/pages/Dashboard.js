@@ -211,7 +211,7 @@ export default function Dashboard({ setAuth }) {
         {/* MAIN AREA */}
         <div className="flex-1 flex flex-col h-screen overflow-hidden">
           {/* NAVBAR */}
-          <header className="flex justify-between items-center px-10 py-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 z-10">
+          <header className="flex justify-between items-center px-4 md:px-10 py-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 z-10">
             <div className="lg:hidden">
               <h1 className="text-xl font-black text-indigo-600">TF</h1>
             </div>
@@ -246,17 +246,17 @@ export default function Dashboard({ setAuth }) {
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-10 bg-gray-50 dark:bg-gray-950">
+          <main className="flex-1 overflow-y-auto p-4 md:p-10 bg-gray-50 dark:bg-gray-950">
             <div className="max-w-4xl mx-auto">
 
               {/* WELCOME */}
-              <div className="mb-10">
-                <h2 className="text-4xl font-black text-gray-800 dark:text-white mb-2">My Tasks</h2>
-                <p className="text-gray-500 dark:text-gray-400">Manage your productivity and daily goals with ease.</p>
+              <div className="mb-6 md:mb-10">
+                <h2 className="text-2xl md:text-4xl font-black text-gray-800 dark:text-white mb-2">My Tasks</h2>
+                <p className="text-sm md:text-base text-gray-500 dark:text-gray-400">Manage your productivity and daily goals with ease.</p>
               </div>
 
               {/* STATS */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-10">
                 <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total</p>
                   <p className="text-3xl font-black dark:text-white">{todos.length}</p>
@@ -294,21 +294,21 @@ export default function Dashboard({ setAuth }) {
               </div>
 
               {/* INPUT SECTION */}
-              <section className="bg-white dark:bg-gray-900/50 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl border border-gray-100 dark:border-indigo-500/20 mb-10 transition-all hover:border-indigo-500/40 hover:shadow-indigo-500/10">
+              <section className="bg-white dark:bg-gray-900/50 backdrop-blur-xl p-5 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-gray-100 dark:border-indigo-500/20 mb-10 transition-all hover:border-indigo-500/40 hover:shadow-indigo-500/10">
                 <div className="flex flex-col gap-4">
-                  <div className="flex gap-4">
+                  <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1">
                       <input
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         placeholder="What needs to be done?"
-                        className="w-full text-xl font-bold bg-transparent border-none outline-none focus:ring-0 dark:text-white dark:placeholder-white/40 py-2"
+                        className="w-full text-lg md:text-xl font-bold bg-transparent border-none outline-none focus:ring-0 dark:text-white dark:placeholder-white/40 py-2"
                       />
                       <textarea
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="Add a detailed description..."
-                        className="w-full text-md font-medium bg-transparent border-none outline-none focus:ring-0 dark:text-indigo-100/70 dark:placeholder-indigo-100/30 py-1 resize-none h-16"
+                        className="w-full text-sm md:text-md font-medium bg-transparent border-none outline-none focus:ring-0 dark:text-indigo-100/70 dark:placeholder-indigo-100/30 py-1 resize-none h-16 md:h-16"
                       />
                     </div>
                     <motion.button
@@ -326,14 +326,14 @@ export default function Dashboard({ setAuth }) {
                       }}
                       onClick={addTodo}
                       disabled={!text.trim()}
-                      className="group relative inline-flex items-center justify-center px-10 py-4 font-black text-white transition-all duration-300 bg-gradient-to-br from-cyan-400 via-indigo-600 to-purple-700 rounded-2xl shadow-[0_0_30px_rgba(34,211,238,0.4)] hover:shadow-[0_0_50px_rgba(34,211,238,0.6)] disabled:opacity-50 disabled:shadow-none overflow-hidden"
+                      className="group relative inline-flex items-center justify-center px-6 md:px-10 py-3 md:py-4 font-black text-white transition-all duration-300 bg-gradient-to-br from-cyan-400 via-indigo-600 to-purple-700 rounded-2xl shadow-[0_0_30px_rgba(34,211,238,0.4)] hover:shadow-[0_0_50px_rgba(34,211,238,0.6)] disabled:opacity-50 disabled:shadow-none overflow-hidden"
                     >
-                      <span className="relative z-10 flex items-center gap-2 text-lg">
-                        Add New Task
+                      <span className="relative z-10 flex items-center gap-2 text-md md:text-lg">
+                        Add Task
                         <motion.span
                           animate={{ rotate: [0, 90, 0] }}
                           transition={{ duration: 2, repeat: Infinity }}
-                          className="text-2xl"
+                          className="text-xl md:text-2xl"
                         >
                           +
                         </motion.span>
@@ -405,7 +405,7 @@ export default function Dashboard({ setAuth }) {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         whileHover={{ y: -2 }}
-                        className="group flex items-center gap-4 bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 transition-all hover:shadow-md cursor-pointer"
+                        className="group flex items-center gap-3 md:gap-4 bg-white dark:bg-gray-900 p-4 md:p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 transition-all hover:shadow-md cursor-pointer"
                         onClick={() => setSelectedTask(todo)}
                       >
                         <input

@@ -43,7 +43,7 @@ export default function Login({ setAuth, setShowRegister }) {
         initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="text-5xl font-extrabold text-white mb-10 tracking-wide"
+        className="text-3xl md:text-5xl font-extrabold text-white mb-10 tracking-wide text-center"
       >
         Organize Your Day
       </motion.h1>
@@ -53,7 +53,7 @@ export default function Login({ setAuth, setShowRegister }) {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
-        className="bg-white p-8 rounded-2xl shadow-2xl w-[360px]"
+        className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-[90%] max-w-[360px]"
       >
         <h2 className="text-2xl font-bold mb-4 text-center">
           Welcome Back 👋
