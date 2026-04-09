@@ -1,12 +1,16 @@
 const express = require("express");
 const Todo = require("../models/todo");
+const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// GET all todos
+// Apply auth middleware to all routes
+router.use(auth);
+
+// GET all todos for current user
 router.get("/", async (req, res) => {
   try {
-    const todos = await Todo.find();
+    const todos = await Todo.find({ userId: req.user.id });
     res.json(todos);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -18,6 +22,7 @@ router.post("/", async (req, res) => {
   try {
     const newTodo = new Todo({
       text: req.body.text,
+      userId: req.user.id, // Associate todo with current user
       priority: req.body.priority,
       dueDate: req.body.dueDate,
       category: req.body.category,
@@ -34,7 +39,8 @@ router.post("/", async (req, res) => {
 // DELETE a todo
 router.delete("/:id", async (req, res) => {
   try {
-    await Todo.findByIdAndDelete(req.params.id);
+    const todo = await Todo.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+    if (!todo) return res.status(404).json({ message: "Todo not found or unauthorized" });
     res.json({ message: "Todo deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -43,8 +49,8 @@ router.delete("/:id", async (req, res) => {
 // UPDATE todo (toggle completed)
 router.put("/:id", async (req, res) => {
   try {
-    const updatedTodo = await Todo.findByIdAndUpdate(
-      req.params.id,
+    const updatedTodo = await Todo.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
       {
         text: req.body.text,
         completed: req.body.completed,
@@ -55,6 +61,7 @@ router.put("/:id", async (req, res) => {
       },
       { new: true }
     );
+    if (!updatedTodo) return res.status(404).json({ message: "Todo not found or unauthorized" });
     res.json(updatedTodo);
   } catch (error) {
     res.status(500).json({ message: error.message });

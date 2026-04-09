@@ -40,9 +40,13 @@ export default function Dashboard({ setAuth }) {
 
   async function fetchTodos() {
     try {
-      const res = await fetch(API);
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const res = await fetch(API, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       const data = await res.json();
-      setTodos(data);
+      if (res.ok) setTodos(data);
     } catch (err) {
       console.error(err);
     }
@@ -51,9 +55,13 @@ export default function Dashboard({ setAuth }) {
   async function addTodo() {
     if (!text.trim()) return;
 
+    const token = localStorage.getItem("token");
     await fetch(API, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
       body: JSON.stringify({
         text,
         priority,
@@ -71,16 +79,24 @@ export default function Dashboard({ setAuth }) {
   }
 
   async function toggleTodo(id, completed) {
+    const token = localStorage.getItem("token");
     await fetch(`${API}/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
       body: JSON.stringify({ completed: !completed }),
     });
     fetchTodos();
   }
 
   async function deleteTodo(id) {
-    await fetch(`${API}/${id}`, { method: "DELETE" });
+    const token = localStorage.getItem("token");
+    await fetch(`${API}/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
     fetchTodos();
   }
 
@@ -97,9 +113,13 @@ export default function Dashboard({ setAuth }) {
       description: updates.description !== undefined ? updates.description : todoToUpdate.description
     };
 
+    const token = localStorage.getItem("token");
     await fetch(`${API}/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
       body: JSON.stringify(body),
     });
     setEditingId(null);

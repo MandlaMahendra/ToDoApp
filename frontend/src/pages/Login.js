@@ -27,7 +27,11 @@ export default function Login({ setAuth, setShowRegister }) {
       setAuth(true);
     } catch (err) {
       console.error("Login attempt failed:", err);
-      setError("Unable to connect to server. Please try again later.");
+      if (err instanceof TypeError) {
+        setError("Unable to connect to server. Please check if the backend is running.");
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
     }
   }
 
