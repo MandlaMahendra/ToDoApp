@@ -15,6 +15,12 @@ app.use("/api/todos", todoRoutes);
 
 app.use("/api/auth", require("./routes/authRoutes"));
 
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: "Something went wrong on the server!" });
+});
+
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB Connected"))
 .catch(err => console.log(err));

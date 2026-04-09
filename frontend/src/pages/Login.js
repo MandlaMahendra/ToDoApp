@@ -8,6 +8,7 @@ export default function Login({ setAuth, setShowRegister }) {
   const [error, setError] = useState("");
 
   async function login() {
+    setError(""); // Clear previous errors
     try {
       const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
@@ -25,7 +26,8 @@ export default function Login({ setAuth, setShowRegister }) {
       localStorage.setItem("token", data.token);
       setAuth(true);
     } catch (err) {
-      setError("Server error");
+      console.error("Login attempt failed:", err);
+      setError("Unable to connect to server. Please try again later.");
     }
   }
 

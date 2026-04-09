@@ -8,6 +8,7 @@ export default function Register({ setAuth, setShowRegister }) {
   const [error, setError] = useState("");
 
   async function register() {
+    setError(""); // Clear previous errors
     try {
       const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
@@ -24,7 +25,8 @@ export default function Register({ setAuth, setShowRegister }) {
 
       setShowRegister(false);
     } catch (err) {
-      setError("Server error");
+      console.error("Registration attempt failed:", err);
+      setError("Unable to connect to server. Please try again later.");
     }
   }
 
