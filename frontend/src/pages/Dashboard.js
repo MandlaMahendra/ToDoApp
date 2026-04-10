@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import { API_BASE_URL } from "../api";
 const API = `${API_BASE_URL}/api/todos`;
 export default function Dashboard({ setAuth }) {
@@ -177,6 +178,13 @@ export default function Dashboard({ setAuth }) {
                   <span>{f} Tasks</span>
                 </button>
               ))}
+
+              <Link
+                to="/pricing"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 font-bold mt-4"
+              >
+                <span>⭐ Upgrade to Pro</span>
+              </Link>
             </nav>
           </div>
 
@@ -593,8 +601,18 @@ export default function Dashboard({ setAuth }) {
                 <div>
                   <h3 className="text-lg font-bold dark:text-white">{user?.name || "User"}</h3>
                   <p className="text-sm text-gray-400">{user?.email || "No email"}</p>
+                  <div className="mt-2 inline-block px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-xs font-black uppercase">
+                    {user?.subscriptionPlan || "free"} PLAN
+                  </div>
                 </div>
                 <div className="w-full pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <Link
+                    to="/pricing"
+                    className="block w-full py-2 mb-2 rounded-xl text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 transition font-bold"
+                    onClick={() => setShowProfile(false)}
+                  >
+                    Pricing & Plans
+                  </Link>
                   <button
                     onClick={logout}
                     className="w-full py-2 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition font-bold"

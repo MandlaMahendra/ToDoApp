@@ -14,6 +14,7 @@ const todoRoutes = require("./routes/todoRoutes");
 app.use("/api/todos", todoRoutes);
 
 app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/payment", require("./routes/paymentRoutes"));
 
 // Global Error Handler
 app.use((err, req, res, next) => {

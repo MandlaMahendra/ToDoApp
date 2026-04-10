@@ -1,5 +1,6 @@
 const express = require("express");
 const Todo = require("../models/todo");
+const User = require("../models/User");
 const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -20,6 +21,20 @@ router.get("/", async (req, res) => {
 // ADD a new todo
 router.post("/", async (req, res) => {
   try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Check limit for free users
+    if (user.subscriptionPlan === "free") {
+      const todoCount = await Todo.countDocuments({ userId: req.user.id });
+      if (todoCount >= 10) {
+        return res.status(403).json({
+          message: "Free limit reached. Upgrade to Pro for unlimited todos!",
+          limitReached: true
+        });
+      }
+    }
+
     const newTodo = new Todo({
       text: req.body.text,
       userId: req.user.id, // Associate todo with current user
