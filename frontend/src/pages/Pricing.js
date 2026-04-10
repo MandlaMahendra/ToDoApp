@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../api";
@@ -8,11 +8,7 @@ const Pricing = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchUser();
-  }, []);
-
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) return navigate("/login");
@@ -24,7 +20,11 @@ const Pricing = () => {
     } catch (err) {
       console.error("Fetch user error", err);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
 
   const handleUpgrade = async () => {
     try {

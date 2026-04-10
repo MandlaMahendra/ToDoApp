@@ -10,19 +10,17 @@ export default function App() {
     !!localStorage.getItem("token")
   );
 
-  const [showRegister, setShowRegister] = useState(false);
-
   return (
     <Router>
       <Routes>
         {/* Public Routes */}
         <Route 
           path="/login" 
-          element={!auth ? <Login setAuth={setAuth} setShowRegister={setShowRegister} /> : <Navigate to="/dashboard" />} 
+          element={!auth ? <Login setAuth={setAuth} /> : <Navigate to="/dashboard" />} 
         />
         <Route 
           path="/register" 
-          element={!auth ? <Register setAuth={setAuth} setShowRegister={setShowRegister} /> : <Navigate to="/dashboard" />} 
+          element={!auth ? <Register setAuth={setAuth} /> : <Navigate to="/dashboard" />} 
         />
         
         {/* Private Routes */}

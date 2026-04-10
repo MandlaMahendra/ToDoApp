@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { API_BASE_URL } from "../api";
 
-export default function Login({ setAuth, setShowRegister }) {
+export default function Login({ setAuth }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   async function login() {
     setError(""); // Clear previous errors
@@ -88,12 +90,12 @@ export default function Login({ setAuth, setShowRegister }) {
 
         <p className="text-sm text-center mt-4">
           Don’t have an account?{" "}
-          <span
+          <Link
+            to="/register"
             className="text-indigo-600 cursor-pointer font-semibold"
-            onClick={() => setShowRegister(true)}
           >
             Register
-          </span>
+          </Link>
         </p>
       </motion.div>
     </div>

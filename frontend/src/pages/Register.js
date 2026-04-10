@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../api";
 
-export default function Register({ setAuth, setShowRegister }) {
+export default function Register({ setAuth }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   async function register() {
     setError(""); // Clear previous errors
@@ -23,7 +25,7 @@ export default function Register({ setAuth, setShowRegister }) {
         return;
       }
 
-      setShowRegister(false);
+      navigate("/login");
     } catch (err) {
       console.error("Registration attempt failed:", err);
       setError("Unable to connect to server. Please try again later.");
@@ -70,12 +72,12 @@ export default function Register({ setAuth, setShowRegister }) {
 
         <p className="text-sm text-center mt-4">
           Already have an account?{" "}
-          <span
+          <Link
+            to="/login"
             className="text-indigo-600 cursor-pointer font-semibold"
-            onClick={() => setShowRegister(false)}
           >
             Login
-          </span>
+          </Link>
         </p>
       </div>
     </div>
