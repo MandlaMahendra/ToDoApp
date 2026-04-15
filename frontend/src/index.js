@@ -5,10 +5,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
-const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-if (!clientId) {
-  console.error("Google Client ID is missing! Make sure REACT_APP_GOOGLE_CLIENT_ID is set in your .env file and restart the server.");
-}
+const clientId = "1054769505992-jm0s9dm2vie7bdbtfi1toj8e5nbjnhbg.apps.googleusercontent.com";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
