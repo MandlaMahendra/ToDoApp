@@ -23,8 +23,14 @@ app.use((err, req, res, next) => {
 });
 
 mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("MongoDB Connected"))
-.catch(err => console.log(err));
+.then(() => console.log("✔ MongoDB Connected Successfully"))
+.catch(err => {
+  console.error("❌ MONGODB CONNECTION ERROR:");
+  console.error(err.message);
+  if (err.message.includes("whitelist")) {
+    console.error("TIP: Ensure your Render IP (or 0.0.0.0/0) is whitelisted in MongoDB Atlas.");
+  }
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

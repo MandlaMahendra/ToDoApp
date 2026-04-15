@@ -4,8 +4,6 @@ const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
 const router = express.Router();
 
 // REGISTER
@@ -80,10 +78,16 @@ router.post("/google", async (req, res) => {
     const { credential } = req.body;
     const clientId = process.env.GOOGLE_CLIENT_ID || process.env.REACT_APP_GOOGLE_CLIENT_ID;
     
-    const ticket = await client.verifyIdToken({
+    // Initialize client here to ensure environment variables are loaded
+    const authClient = new OAuth2Client(clientId);
+    
+    console.log("Attempting Google Auth with Client ID:", clientId ? "FOUND" : "MISSING");
+
+    const ticket = await authClient.verifyIdToken({
       idToken: credential,
       audience: clientId,
     });
+    
     const payload = ticket.getPayload();
     const { sub: googleId, email, name } = payload;
 
@@ -111,8 +115,11 @@ router.post("/google", async (req, res) => {
 
     res.json({ token });
   } catch (error) {
-    console.error("Google Auth Error:", error);
-    res.status(500).json({ message: "Server error during Google auth" });
+    console.error("CRITICAL GOOGLE AUTH ERROR:", error);
+    res.status(500).json({ 
+      message: "Server error during Google auth",
+      details: error.message 
+    });
   }
 });
 
