@@ -76,12 +76,18 @@ router.get("/me", async (req, res) => {
 router.post("/google", async (req, res) => {
   try {
     const { credential } = req.body;
-    const clientId = process.env.GOOGLE_CLIENT_ID || process.env.REACT_APP_GOOGLE_CLIENT_ID;
+    // Check both potential variable names and trim any accidental whitespace
+    const rawClientId = process.env.GOOGLE_CLIENT_ID || process.env.REACT_APP_GOOGLE_CLIENT_ID || "1054769505992-jm0s9dm2vie7bdbtfi1toj8e5nbjnhbg.apps.googleusercontent.com";
+    const clientId = rawClientId.trim();
     
     // Initialize client here to ensure environment variables are loaded
     const authClient = new OAuth2Client(clientId);
     
-    console.log("Attempting Google Auth with Client ID:", clientId ? "FOUND" : "MISSING");
+    if (clientId) {
+      console.log(`[DEBUG] Using Client ID ending in: ...${clientId.slice(-6)} (Length: ${clientId.length})`);
+    } else {
+      console.error("[ERROR] Google Client ID is MISSING from environment variables!");
+    }
 
     const ticket = await authClient.verifyIdToken({
       idToken: credential,
