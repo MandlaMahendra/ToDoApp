@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
-  password: String,
+  password: { type: String, required: function() { return !this.googleId; } },
+  googleId: String,
   subscriptionPlan: { type: String, enum: ["free", "pro"], default: "free" },
   razorpayOrderId: String,
   razorpayPaymentId: String

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { API_BASE_URL } from "../api";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function Login({ setAuth }) {
   const [email, setEmail] = useState("");
@@ -33,6 +34,30 @@ export default function Login({ setAuth }) {
       } else {
         setError("An unexpected error occurred. Please try again.");
       }
+    }
+  }
+
+  async function handleGoogleSuccess(credentialResponse) {
+    setError("");
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential: credentialResponse.credential }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Google Login failed");
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      setAuth(true);
+    } catch (err) {
+      console.error("Google Login Error:", err);
+      setError("An error occurred during Google Login.");
     }
   }
 
@@ -86,6 +111,26 @@ export default function Login({ setAuth }) {
         >
           Login
         </button>
+
+        <div className="flex items-center my-4">
+          <div className="flex-grow h-px bg-gray-300"></div>
+          <span className="px-2 text-gray-500 text-sm">OR</span>
+          <div className="flex-grow h-px bg-gray-300"></div>
+        </div>
+
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => {
+              console.log("Login Failed");
+              setError("Google Login failed");
+            }}
+            useOneTap
+            shape="pill"
+            theme="filled_blue"
+            text="continue_with"
+          />
+        </div>
 
         <p className="text-sm text-center mt-4">
           Don’t have an account?{" "}
