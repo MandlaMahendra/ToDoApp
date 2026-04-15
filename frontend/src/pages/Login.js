@@ -128,7 +128,7 @@ export default function Login({ setAuth }) {
             useOneTap
             shape="pill"
             theme="filled_blue"
-            text="continue_with"
+            text="signin_with"
           />
         </div>
 
