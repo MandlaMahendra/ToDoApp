@@ -78,9 +78,11 @@ router.get("/me", async (req, res) => {
 router.post("/google", async (req, res) => {
   try {
     const { credential } = req.body;
+    const clientId = process.env.GOOGLE_CLIENT_ID || process.env.REACT_APP_GOOGLE_CLIENT_ID;
+    
     const ticket = await client.verifyIdToken({
       idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: clientId,
     });
     const payload = ticket.getPayload();
     const { sub: googleId, email, name } = payload;
