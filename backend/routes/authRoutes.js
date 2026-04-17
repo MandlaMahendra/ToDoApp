@@ -10,17 +10,24 @@ const router = express.Router();
 // REGISTER
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, password } = req.body;
+    const email = (req.body.email || "").toLowerCase().trim();
+    console.log(`[AUTH] Registering user: ${email}`);
+
     const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: "User already exists" });
+    if (existingUser) {
+      console.log(`[AUTH] Registration failed: Email ${email} already exists.`);
+      return res.status(400).json({ message: "User already exists" });
+    }
 
     const hashed = await bcrypt.hash(password, 10);
     const user = new User({ name, email, password: hashed });
 
     await user.save();
+    console.log(`[AUTH] User registered successfully: ${email}`);
     res.json({ message: "User registered" });
   } catch (error) {
-    console.error("Register Error:", error);
+    console.error(`[AUTH] Register Error for ${req.body.email}:`, error);
     res.status(500).json({ message: "Server error during registration" });
   }
 });
@@ -28,18 +35,19 @@ router.post("/register", async (req, res) => {
 // LOGIN — Step 1: Validate credentials and send OTP
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
-    console.log("Login attempt for:", email);
+    const { password } = req.body;
+    const email = (req.body.email || "").toLowerCase().trim();
+    console.log(`[AUTH] Login attempt received for: ${email}`);
 
     const user = await User.findOne({ email });
     if (!user) {
-      console.log("User not found:", email);
+      console.log(`[AUTH] Login failed: User not found for ${email}`);
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log("Invalid password for:", email);
+      console.log(`[AUTH] Login failed: Incorrect password for ${email}`);
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
@@ -48,19 +56,22 @@ router.post("/login", async (req, res) => {
     user.otp = otp;
     user.otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
     await user.save();
+    console.log(`[AUTH] OTP generated for ${email}: ${otp} (Expires in 5m)`);
 
     // Send OTP email (non-fatal if it fails)
     try {
+      console.log(`[AUTH] Attempting to send OTP email to: ${email}`);
       await sendOTPEmail(email, otp);
-      console.log("✅ OTP email sent to:", email);
+      console.log(`[AUTH] ✅ OTP email sent successfully to: ${email}`);
     } catch (emailErr) {
-      console.error("❌ Email send failed:", emailErr.message);
-      console.log(`🔑 [DEBUG] OTP for ${email}: ${otp}`); // visible in Render logs
+      console.error(`[AUTH] ❌ Email send failed for ${email}:`, emailErr.message);
+      // Fallback debug log (still secure as it's server-side)
+      console.log(`[DEBUG] OTP for ${email}: ${otp}`); 
     }
 
     res.json({ otpRequired: true, message: "Verification code sent to your email" });
   } catch (error) {
-    console.error("Login Error:", error);
+    console.error(`[AUTH] Login Error for ${req.body.email}:`, error);
     res.status(500).json({ message: "Server error during login" });
   }
 });
@@ -68,20 +79,24 @@ router.post("/login", async (req, res) => {
 // LOGIN — Step 2: Verify OTP and return token
 router.post("/verify-otp", async (req, res) => {
   try {
-    const { email, otp } = req.body;
-    console.log("OTP verification for:", email);
+    const { otp } = req.body;
+    const email = (req.body.email || "").toLowerCase().trim();
+    console.log(`[AUTH] OTP verification attempt for: ${email}`);
 
     const user = await User.findOne({ email });
     if (!user) {
+      console.log(`[AUTH] Verification failed: User not found for ${email}`);
       return res.status(400).json({ message: "User not found" });
     }
 
     // Check if OTP exists and hasn't expired
     if (!user.otp || !user.otpExpires) {
+      console.log(`[AUTH] Verification failed: No OTP record for ${email}`);
       return res.status(400).json({ message: "No verification code found. Please login again." });
     }
 
     if (new Date() > user.otpExpires) {
+      console.log(`[AUTH] Verification failed: OTP expired for ${email}`);
       // Clear expired OTP
       user.otp = undefined;
       user.otpExpires = undefined;
@@ -90,6 +105,7 @@ router.post("/verify-otp", async (req, res) => {
     }
 
     if (user.otp !== otp) {
+      console.log(`[AUTH] Verification failed: Invalid code provided for ${email}`);
       return res.status(400).json({ message: "Invalid verification code" });
     }
 
@@ -104,10 +120,10 @@ router.post("/verify-otp", async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    console.log("OTP verified, login successful for:", email);
+    console.log(`[AUTH] ✅ OTP verified, login successful for: ${email}`);
     res.json({ token });
   } catch (error) {
-    console.error("OTP Verification Error:", error);
+    console.error(`[AUTH] OTP Verification Error for ${req.body.email}:`, error);
     res.status(500).json({ message: "Server error during verification" });
   }
 });
@@ -115,10 +131,12 @@ router.post("/verify-otp", async (req, res) => {
 // RESEND OTP
 router.post("/resend-otp", async (req, res) => {
   try {
-    const { email } = req.body;
+    const email = (req.body.email || "").toLowerCase().trim();
+    console.log(`[AUTH] Resend OTP requested for: ${email}`);
 
     const user = await User.findOne({ email });
     if (!user) {
+      console.log(`[AUTH] Resend failed: User not found for ${email}`);
       return res.status(400).json({ message: "User not found" });
     }
 
@@ -127,18 +145,20 @@ router.post("/resend-otp", async (req, res) => {
     user.otp = otp;
     user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
     await user.save();
+    console.log(`[AUTH] New OTP generated for ${email}: ${otp}`);
 
     try {
+      console.log(`[AUTH] Attempting to resend OTP email to: ${email}`);
       await sendOTPEmail(email, otp);
-      console.log("✅ OTP resent to:", email);
+      console.log(`[AUTH] ✅ OTP resent successfully to: ${email}`);
     } catch (emailErr) {
-      console.error("❌ Resend email failed:", emailErr.message);
-      console.log(`🔑 [DEBUG] Resend OTP for ${email}: ${otp}`);
+      console.error(`[AUTH] ❌ Resend email failed for ${email}:`, emailErr.message);
+      console.log(`[DEBUG] Resend OTP for ${email}: ${otp}`);
     }
 
     res.json({ message: "New verification code sent" });
   } catch (error) {
-    console.error("Resend OTP Error:", error);
+    console.error(`[AUTH] Resend OTP Error for ${req.body.email}:`, error);
     res.status(500).json({ message: "Failed to resend verification code" });
   }
 });

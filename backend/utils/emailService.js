@@ -17,6 +17,7 @@ if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
 }
 
 async function sendOTPEmail(toEmail, otp) {
+  console.log(`[EMAIL_SERVICE] Preparing to send OTP ${otp} to: ${toEmail}`);
   const mailOptions = {
     from: process.env.EMAIL_USER,  // plain address — avoids spam filters
     to: toEmail,
@@ -43,10 +44,10 @@ async function sendOTPEmail(toEmail, otp) {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log("OTP email sent to:", toEmail, "Message ID:", info.messageId);
+    console.log(`[EMAIL_SERVICE] ✅ Email sent successfully to ${toEmail}. Message ID: ${info.messageId}`);
     return true;
   } catch (error) {
-    console.error("Failed to send OTP email:", error);
+    console.error(`[EMAIL_SERVICE] ❌ Error sending email to ${toEmail}:`, error.message);
     throw new Error("Failed to send verification email");
   }
 }
