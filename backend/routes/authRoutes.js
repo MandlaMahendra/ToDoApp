@@ -1,8 +1,9 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { OAuth2Client } = require("google-auth-library");
+const passport = require("passport");
 const User = require("../models/User");
+const { sendOTPEmail, generateOTP } = require("../utils/emailService");
 
 const router = express.Router();
 
@@ -24,7 +25,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// LOGIN
+// LOGIN — Step 1: Validate credentials and send OTP
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -42,17 +43,93 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    // Generate and save OTP
+    const otp = generateOTP();
+    user.otp = otp;
+    user.otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    await user.save();
+
+    // Send OTP email
+    await sendOTPEmail(email, otp);
+
+    console.log("OTP sent to:", email);
+    res.json({ otpRequired: true, message: "Verification code sent to your email" });
+  } catch (error) {
+    console.error("Login Error:", error);
+    res.status(500).json({ message: "Server error during login" });
+  }
+});
+
+// LOGIN — Step 2: Verify OTP and return token
+router.post("/verify-otp", async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    console.log("OTP verification for:", email);
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    // Check if OTP exists and hasn't expired
+    if (!user.otp || !user.otpExpires) {
+      return res.status(400).json({ message: "No verification code found. Please login again." });
+    }
+
+    if (new Date() > user.otpExpires) {
+      // Clear expired OTP
+      user.otp = undefined;
+      user.otpExpires = undefined;
+      await user.save();
+      return res.status(400).json({ message: "Verification code expired. Please login again." });
+    }
+
+    if (user.otp !== otp) {
+      return res.status(400).json({ message: "Invalid verification code" });
+    }
+
+    // OTP verified — clear it and generate token
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
     const token = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET || "SECRET_KEY",
       { expiresIn: "1d" }
     );
 
-    console.log("Login successful for:", email);
+    console.log("OTP verified, login successful for:", email);
     res.json({ token });
   } catch (error) {
-    console.error("Login Error:", error);
-    res.status(500).json({ message: "Server error during login" });
+    console.error("OTP Verification Error:", error);
+    res.status(500).json({ message: "Server error during verification" });
+  }
+});
+
+// RESEND OTP
+router.post("/resend-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    // Generate new OTP
+    const otp = generateOTP();
+    user.otp = otp;
+    user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+    await user.save();
+
+    await sendOTPEmail(email, otp);
+
+    console.log("OTP resent to:", email);
+    res.json({ message: "New verification code sent" });
+  } catch (error) {
+    console.error("Resend OTP Error:", error);
+    res.status(500).json({ message: "Failed to resend verification code" });
   }
 });
 
@@ -72,61 +149,29 @@ router.get("/me", async (req, res) => {
   }
 });
 
-// GOOGLE AUTH
-router.post("/google", async (req, res) => {
-  try {
-    const { credential } = req.body;
-    // Check both potential variable names and trim any accidental whitespace
-    const rawClientId = process.env.GOOGLE_CLIENT_ID || process.env.REACT_APP_GOOGLE_CLIENT_ID || "1054769505992-jm0s9dm2vie7bdbtfi1toj8e5nbjnhbg.apps.googleusercontent.com";
-    const clientId = rawClientId.trim();
-    
-    // Initialize client here to ensure environment variables are loaded
-    const authClient = new OAuth2Client(clientId);
-    
-    if (clientId) {
-      console.log(`[DEBUG] Using Client ID ending in: ...${clientId.slice(-6)} (Length: ${clientId.length})`);
-    } else {
-      console.error("[ERROR] Google Client ID is MISSING from environment variables!");
+// GOOGLE AUTH INITIALIZE
+router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+// GOOGLE AUTH CALLBACK
+router.get("/google/callback",
+  passport.authenticate("google", { failureRedirect: "http://localhost:3000/login" }),
+  (req, res) => {
+    try {
+      // Generate JWT for the authenticated user
+      const token = jwt.sign(
+        { id: req.user._id },
+        process.env.JWT_SECRET || "todo_secret", // Use same secret as other routes
+        { expiresIn: "1d" }
+      );
+
+      console.log("Google Auth successful, redirecting with token");
+      // Redirect back to frontend dashboard with the token
+      res.redirect(`http://localhost:3000/dashboard?token=${token}`);
+    } catch (error) {
+      console.error("Google Callback Error:", error);
+      res.redirect("http://localhost:3000/login?error=server_error");
     }
-
-    const ticket = await authClient.verifyIdToken({
-      idToken: credential,
-      audience: clientId,
-    });
-    
-    const payload = ticket.getPayload();
-    const { sub: googleId, email, name } = payload;
-
-    let user = await User.findOne({ email });
-
-    if (user) {
-      if (!user.googleId) {
-        user.googleId = googleId;
-        await user.save();
-      }
-    } else {
-      user = new User({
-        name,
-        email,
-        googleId,
-      });
-      await user.save();
-    }
-
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET || "SECRET_KEY",
-      { expiresIn: "1d" }
-    );
-
-    res.json({ token });
-  } catch (error) {
-    console.error("CRITICAL GOOGLE AUTH ERROR:", error);
-    res.status(500).json({ 
-      message: "Server error during Google auth",
-      details: error.message 
-    });
   }
-});
+);
 
 module.exports = router;

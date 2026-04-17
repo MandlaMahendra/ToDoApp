@@ -1,18 +1,37 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const session = require("express-session");
+const passport = require("./config/passport");
 require("dotenv").config();
 
 const app = express();
 
 // middleware
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:3000",
+  credentials: true
+}));
 app.use(express.json());
+
+// Session Middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || "todo_secret",
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // Set to true if using HTTPS
+}));
+
+// Passport Middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
 // routes
 const todoRoutes = require("./routes/todoRoutes");
 app.use("/api/todos", todoRoutes);
 
+// Auth Routes (Mount at both for legacy and new OAuth)
+app.use("/auth", require("./routes/authRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/payment", require("./routes/paymentRoutes"));
 

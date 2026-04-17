@@ -5,10 +5,20 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Pricing from "./pages/Pricing";
 
+// Check for token in URL BEFORE first render (Google OAuth redirect)
+function getInitialAuth() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get("token");
+  if (token) {
+    localStorage.setItem("token", token);
+    window.history.replaceState({}, document.title, "/dashboard");
+    return true;
+  }
+  return !!localStorage.getItem("token");
+}
+
 export default function App() {
-  const [auth, setAuth] = useState(
-    !!localStorage.getItem("token")
-  );
+  const [auth, setAuth] = useState(getInitialAuth);
 
   return (
     <Router>

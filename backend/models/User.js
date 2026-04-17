@@ -7,7 +7,9 @@ const userSchema = new mongoose.Schema({
   googleId: String,
   subscriptionPlan: { type: String, enum: ["free", "pro"], default: "free" },
   razorpayOrderId: String,
-  razorpayPaymentId: String
+  razorpayPaymentId: String,
+  otp: String,
+  otpExpires: Date
 });
 
 module.exports = mongoose.model("User", userSchema);

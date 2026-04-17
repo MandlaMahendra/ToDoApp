@@ -14,7 +14,7 @@ COPY . .
 
 # Build the application
 # Use build-time arguments for environment variables
-ARG REACT_APP_API_URL=/api
+ARG REACT_APP_API_URL=
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
 RUN npm run build
