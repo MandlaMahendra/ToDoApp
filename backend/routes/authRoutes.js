@@ -49,10 +49,15 @@ router.post("/login", async (req, res) => {
     user.otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
     await user.save();
 
-    // Send OTP email
-    await sendOTPEmail(email, otp);
+    // Send OTP email (non-fatal if it fails)
+    try {
+      await sendOTPEmail(email, otp);
+      console.log("OTP email sent to:", email);
+    } catch (emailErr) {
+      console.error("Email send failed:", emailErr.message);
+      console.log(`[DEBUG] OTP for ${email}: ${otp}`); // visible in Render logs
+    }
 
-    console.log("OTP sent to:", email);
     res.json({ otpRequired: true, message: "Verification code sent to your email" });
   } catch (error) {
     console.error("Login Error:", error);
