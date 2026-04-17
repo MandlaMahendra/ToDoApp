@@ -37,47 +37,47 @@ router.post("/login", async (req, res) => {
   try {
     const { password } = req.body;
     const email = (req.body.email || "").toLowerCase().trim();
-    
-    // DEBUG LOG: Extraction
-    console.log(`[AUTH] Step 1: Extracting email from request body: "${email}" (Normalized)`);
 
-    // Generate OTP immediately
+    // 1. Validate input
+    if (!email || !password) {
+      return res.status(400).json({ message: "Please enter username and password" });
+    }
+
+    console.log(`[AUTH] Login attempt for: ${email}`);
+
+    // 2. Database Validation (Check user existence)
+    const user = await User.findOne({ email });
+    if (!user) {
+      console.log(`[AUTH] Login failed: No user found for ${email}`);
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    // 3. Password Validation
+    const isMatch = user.password && await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      console.log(`[AUTH] Login failed: Incorrect password for ${email}`);
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    // 4. Generate OTP (Only after valid credentials)
     const otp = generateOTP();
-    console.log(`[AUTH] Step 2: Generated OTP for ${email}: ${otp}`);
+    console.log(`[AUTH] Generated OTP for ${email}: ${otp}`);
 
-    // SEND OTP IMMEDIATELY (Before strict database validation)
+    // 5. Send OTP
     try {
-      console.log(`[AUTH] Step 3: Sending OTP email immediately to: ${email}`);
+      console.log(`[AUTH] Sending OTP email to: ${email}`);
       await sendOTPEmail(email, otp);
-      console.log(`[AUTH] ✅ Immediate OTP delivery successful for: ${email}`);
+      console.log(`[AUTH] ✅ OTP delivery successful for: ${email}`);
     } catch (emailErr) {
-      console.error(`[AUTH] ❌ Delayed Send Failed for ${email}:`, emailErr.message);
-      // Still log the OTP for the developer's server logs
+      console.error(`[AUTH] ❌ OTP Send Failed for ${email}:`, emailErr.message);
+      // Fallback: log for dev
       console.log(`[DEBUG LOG] OTP for ${email}: ${otp}`);
     }
 
-    // Step 4: Database Validation (Check user existence)
-    const user = await User.findOne({ email });
-    if (!user) {
-      console.log(`[AUTH] Step 4: Validation Warning — No registered user found for ${email}. (Proceeding for UI consistency)`);
-      // Since no user exists, we can't save the OTP, but we return success to protect privacy
-      return res.json({ otpRequired: true, message: "Verification code sent to your email" });
-    }
-
-    // Step 5: Password Validation
-    // FIX: Only compare if the user has a password (they might be Google-only)
-    const isMatch = user.password && await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      console.log(`[AUTH] Step 5: Validation Warning — Incorrect or Missing password for ${email}. (Proceeding for UI consistency)`);
-      // Password doesn't match or is missing, so we don't save the OTP to the DB
-      return res.json({ otpRequired: true, message: "Verification code sent to your email" });
-    }
-
-    // Step 6: Finalize OTP Storage for legitimate user
+    // 6. Finalize OTP Storage
     user.otp = otp;
     user.otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
     await user.save();
-    console.log(`[AUTH] Step 6: ✅ OTP successfully stored in DB for ${email}. Verification ready.`);
 
     res.json({ otpRequired: true, message: "Verification code sent to your email" });
   } catch (error) {

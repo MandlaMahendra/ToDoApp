@@ -40,6 +40,13 @@ export default function Login({ setAuth }) {
 
   async function login() {
     setError("");
+
+    // 1. Client-side validation
+    if (!email || !password) {
+      setError("Please enter username and password");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
