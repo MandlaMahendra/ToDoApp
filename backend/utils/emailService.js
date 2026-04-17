@@ -5,18 +5,13 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_APP_PASSWORD,
+    pass: (process.env.EMAIL_APP_PASSWORD || "").replace(/\s/g, ""), // remove spaces
   },
 });
 
-/**
- * Send OTP verification email
- * @param {string} toEmail - Recipient email
- * @param {string} otp - 6-digit OTP code
- */
 async function sendOTPEmail(toEmail, otp) {
   const mailOptions = {
-    from: `"TaskFlow Pro 🔐" <${process.env.EMAIL_USER}>`,
+    from: process.env.EMAIL_USER,  // plain address — avoids spam filters
     to: toEmail,
     subject: "Your Login Verification Code",
     html: `
