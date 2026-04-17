@@ -52,10 +52,10 @@ router.post("/login", async (req, res) => {
     // Send OTP email (non-fatal if it fails)
     try {
       await sendOTPEmail(email, otp);
-      console.log("OTP email sent to:", email);
+      console.log("✅ OTP email sent to:", email);
     } catch (emailErr) {
-      console.error("Email send failed:", emailErr.message);
-      console.log(`[DEBUG] OTP for ${email}: ${otp}`); // visible in Render logs
+      console.error("❌ Email send failed:", emailErr.message);
+      console.log(`🔑 [DEBUG] OTP for ${email}: ${otp}`); // visible in Render logs
     }
 
     res.json({ otpRequired: true, message: "Verification code sent to your email" });
@@ -130,10 +130,10 @@ router.post("/resend-otp", async (req, res) => {
 
     try {
       await sendOTPEmail(email, otp);
-      console.log("OTP resent to:", email);
+      console.log("✅ OTP resent to:", email);
     } catch (emailErr) {
-      console.error("Resend email failed:", emailErr.message);
-      console.log(`[DEBUG] Resend OTP for ${email}: ${otp}`);
+      console.error("❌ Resend email failed:", emailErr.message);
+      console.log(`🔑 [DEBUG] Resend OTP for ${email}: ${otp}`);
     }
 
     res.json({ message: "New verification code sent" });

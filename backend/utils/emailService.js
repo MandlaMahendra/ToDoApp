@@ -9,6 +9,13 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Diagnostic check at startup
+if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
+  console.warn("⚠️  EMAIL_USER or EMAIL_APP_PASSWORD is not set. OTP emails will fail.");
+} else {
+  console.log("✅ Email service initialized for:", process.env.EMAIL_USER);
+}
+
 async function sendOTPEmail(toEmail, otp) {
   const mailOptions = {
     from: process.env.EMAIL_USER,  // plain address — avoids spam filters
