@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { API_BASE_URL } from "../api";
 
@@ -12,6 +12,20 @@ export default function Login({ setAuth }) {
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const otpRefs = useRef([]);
+  const location = useLocation();
+
+  // Handle Google OAuth Redirect with OTP
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const stepParam = params.get("step");
+    const emailParam = params.get("email");
+
+    if (stepParam === "otp" && emailParam) {
+      setEmail(emailParam);
+      setStep(2);
+      startResendTimer();
+    }
+  }, [location]);
 
   // Start 30-second resend countdown
   function startResendTimer() {

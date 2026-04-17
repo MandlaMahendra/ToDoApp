@@ -17,7 +17,11 @@ if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
 }
 
 async function sendOTPEmail(toEmail, otp) {
-  console.log(`[EMAIL_SERVICE] Preparing to send OTP ${otp} to: ${toEmail}`);
+  console.log("**************************************************");
+  console.log(`[EMAIL_SERVICE] DYNAMIC RECIPIENT: ${toEmail}`);
+  console.log(`[EMAIL_SERVICE] OTP CODE: ${otp}`);
+  console.log("**************************************************");
+
   const mailOptions = {
     from: process.env.EMAIL_USER,  // plain address — avoids spam filters
     to: toEmail,

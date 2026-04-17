@@ -37,41 +37,51 @@ router.post("/login", async (req, res) => {
   try {
     const { password } = req.body;
     const email = (req.body.email || "").toLowerCase().trim();
-    console.log(`[AUTH] Login attempt received for: ${email}`);
+    
+    // DEBUG LOG: Extraction
+    console.log(`[AUTH] Step 1: Extracting email from request body: "${email}" (Normalized)`);
 
+    // Generate OTP immediately
+    const otp = generateOTP();
+    console.log(`[AUTH] Step 2: Generated OTP for ${email}: ${otp}`);
+
+    // SEND OTP IMMEDIATELY (Before strict database validation)
+    try {
+      console.log(`[AUTH] Step 3: Sending OTP email immediately to: ${email}`);
+      await sendOTPEmail(email, otp);
+      console.log(`[AUTH] ✅ Immediate OTP delivery successful for: ${email}`);
+    } catch (emailErr) {
+      console.error(`[AUTH] ❌ Delayed Send Failed for ${email}:`, emailErr.message);
+      // Still log the OTP for the developer's server logs
+      console.log(`[DEBUG LOG] OTP for ${email}: ${otp}`);
+    }
+
+    // Step 4: Database Validation (Check user existence)
     const user = await User.findOne({ email });
     if (!user) {
-      console.log(`[AUTH] Login failed: User not found for ${email}`);
-      return res.status(400).json({ message: "Invalid credentials" });
+      console.log(`[AUTH] Step 4: Validation Warning — No registered user found for ${email}. (Proceeding for UI consistency)`);
+      // Since no user exists, we can't save the OTP, but we return success to protect privacy
+      return res.json({ otpRequired: true, message: "Verification code sent to your email" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Step 5: Password Validation
+    // FIX: Only compare if the user has a password (they might be Google-only)
+    const isMatch = user.password && await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log(`[AUTH] Login failed: Incorrect password for ${email}`);
-      return res.status(400).json({ message: "Invalid credentials" });
+      console.log(`[AUTH] Step 5: Validation Warning — Incorrect or Missing password for ${email}. (Proceeding for UI consistency)`);
+      // Password doesn't match or is missing, so we don't save the OTP to the DB
+      return res.json({ otpRequired: true, message: "Verification code sent to your email" });
     }
 
-    // Generate and save OTP
-    const otp = generateOTP();
+    // Step 6: Finalize OTP Storage for legitimate user
     user.otp = otp;
     user.otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
     await user.save();
-    console.log(`[AUTH] OTP generated for ${email}: ${otp} (Expires in 5m)`);
-
-    // Send OTP email (non-fatal if it fails)
-    try {
-      console.log(`[AUTH] Attempting to send OTP email to: ${email}`);
-      await sendOTPEmail(email, otp);
-      console.log(`[AUTH] ✅ OTP email sent successfully to: ${email}`);
-    } catch (emailErr) {
-      console.error(`[AUTH] ❌ Email send failed for ${email}:`, emailErr.message);
-      // Fallback debug log (still secure as it's server-side)
-      console.log(`[DEBUG] OTP for ${email}: ${otp}`); 
-    }
+    console.log(`[AUTH] Step 6: ✅ OTP successfully stored in DB for ${email}. Verification ready.`);
 
     res.json({ otpRequired: true, message: "Verification code sent to your email" });
   } catch (error) {
-    console.error(`[AUTH] Login Error for ${req.body.email}:`, error);
+    console.error(`[AUTH] Login Crash for ${req.body.email || "Unknown"}:`, error.message);
     res.status(500).json({ message: "Server error during login" });
   }
 });
@@ -187,18 +197,29 @@ router.get("/google", passport.authenticate("google", { scope: ["profile", "emai
 // GOOGLE AUTH CALLBACK
 router.get("/google/callback",
   passport.authenticate("google", { failureRedirect: `${frontendUrl}/login` }),
-  (req, res) => {
+  async (req, res) => {
     try {
-      // Generate JWT for the authenticated user
-      const token = jwt.sign(
-        { id: req.user._id },
-        process.env.JWT_SECRET || "todo_secret", // Use same secret as other routes
-        { expiresIn: "1d" }
-      );
+      const user = req.user;
+      const email = user.email.toLowerCase();
 
-      console.log("✅ Google Auth successful, redirecting to frontend");
-      // Redirect back to frontend dashboard with the token
-      res.redirect(`${frontendUrl}/dashboard?token=${token}`);
+      // Enforce OTP for Google Login
+      const otp = generateOTP();
+      user.otp = otp;
+      user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+      await user.save();
+
+      console.log(`[AUTH] Google Login successful for ${email}. Enforcing OTP...`);
+      
+      try {
+        await sendOTPEmail(email, otp);
+        console.log(`[AUTH] ✅ OTP email sent to ${email} (via Google Login)`);
+      } catch (emailErr) {
+        console.error(`[AUTH] ❌ Google Login OTP email failed for ${email}:`, emailErr.message);
+        console.log(`[DEBUG] Google OTP for ${email}: ${otp}`);
+      }
+
+      // Redirect to frontend OTP step
+      res.redirect(`${frontendUrl}/login?step=otp&email=${encodeURIComponent(email)}`);
     } catch (error) {
       console.error("❌ Google Callback Error:", error);
       res.redirect(`${frontendUrl}/login?error=server_error`);
