@@ -7,9 +7,19 @@ require("dotenv").config();
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://todoapp-mahi-pearl.vercel.app",
+];
+
 // middleware
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: function (origin, callback) {
+    // Allow requests with no origin (e.g., Postman, mobile apps)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("Not allowed by CORS"));
+  },
   credentials: true
 }));
 app.use(express.json());
