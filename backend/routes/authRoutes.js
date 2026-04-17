@@ -128,9 +128,14 @@ router.post("/resend-otp", async (req, res) => {
     user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
     await user.save();
 
-    await sendOTPEmail(email, otp);
+    try {
+      await sendOTPEmail(email, otp);
+      console.log("OTP resent to:", email);
+    } catch (emailErr) {
+      console.error("Resend email failed:", emailErr.message);
+      console.log(`[DEBUG] Resend OTP for ${email}: ${otp}`);
+    }
 
-    console.log("OTP resent to:", email);
     res.json({ message: "New verification code sent" });
   } catch (error) {
     console.error("Resend OTP Error:", error);
