@@ -159,12 +159,14 @@ router.get("/me", async (req, res) => {
   }
 });
 
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+
 // GOOGLE AUTH INITIALIZE
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
 // GOOGLE AUTH CALLBACK
 router.get("/google/callback",
-  passport.authenticate("google", { failureRedirect: "http://localhost:3000/login" }),
+  passport.authenticate("google", { failureRedirect: `${frontendUrl}/login` }),
   (req, res) => {
     try {
       // Generate JWT for the authenticated user
@@ -174,12 +176,12 @@ router.get("/google/callback",
         { expiresIn: "1d" }
       );
 
-      console.log("Google Auth successful, redirecting with token");
+      console.log("✅ Google Auth successful, redirecting to frontend");
       // Redirect back to frontend dashboard with the token
-      res.redirect(`http://localhost:3000/dashboard?token=${token}`);
+      res.redirect(`${frontendUrl}/dashboard?token=${token}`);
     } catch (error) {
-      console.error("Google Callback Error:", error);
-      res.redirect("http://localhost:3000/login?error=server_error");
+      console.error("❌ Google Callback Error:", error);
+      res.redirect(`${frontendUrl}/login?error=server_error`);
     }
   }
 );
